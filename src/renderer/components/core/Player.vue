@@ -34,6 +34,9 @@ div(:class="$style.player")
             div(:class="$style.titleBtn" @click='addMusicTo' :tips="$t('core.player.add_music_to')")
               svg(version='1.1' xmlns='http://www.w3.org/2000/svg' xlink='http://www.w3.org/1999/xlink' height='80%' viewBox='0 0 512 512' space='preserve')
                 use(xlink:href='#icon-add-2')
+            div(:class="$style.titleBtn" @click='downloadMusic' :tips="$t('view.list.list_download')")
+              svg(version='1.1' xmlns='http://www.w3.org/2000/svg' xlink='http://www.w3.org/1999/xlink' height='80%' viewBox='0 0 512 512' space='preserve')
+                use(xlink:href='#icon-download')
           //- div(:class="$style.playBtn" @click='playNext' tips="音量")
             svg(version='1.1' xmlns='http://www.w3.org/2000/svg' xlink='http://www.w3.org/1999/xlink' height='100%' viewBox='0 0 291.063 291.064' space='preserve')
               use(xlink:href='#icon-sound')
@@ -69,7 +72,7 @@ div(:class="$style.player")
                       :isPlay="isPlay" @action="handlePlayDetailAction"
                       :nextTogglePlayName="nextTogglePlayName"
                       @toggle-next-play-mode="toggleNextPlayMode" @add-music-to="addMusicTo")
-
+  material-download-modal(:show="isShowDownload" :musicInfo="targetSong" @select="handleAddDownload" @close="isShowDownload = false")
   material-list-add-modal(:show="isShowAddMusicTo" :musicInfo="listId == 'download' ? targetSong.musicInfo : targetSong" @close="isShowAddMusicTo = false")
   svg(version='1.1' xmlns='http://www.w3.org/2000/svg' xlink='http://www.w3.org/1999/xlink' style="display: none;")
     defs
@@ -140,6 +143,7 @@ export default {
         playTime: 0,
       },
       isShowAddMusicTo: false,
+      isShowDownload: false,
     }
   },
   computed: {
@@ -331,6 +335,7 @@ export default {
   methods: {
     ...mapActions('player', ['getUrl', 'getPic', 'getLrc', 'playPrev', 'playNext']),
     ...mapActions('list', ['getOtherSource']),
+    ...mapActions('download', ['createDownload', 'createDownloadMultiple']),
     ...mapMutations('player', [
       'setPlayMusicInfo',
       'setPlayIndex',
@@ -572,6 +577,10 @@ export default {
       audio.currentTime = time
 
       if (!this.isPlay) audio.play()
+    },
+    handleAddDownload(type) {
+      this.createDownload({ musicInfo: this.targetSong, type })
+      this.isShowDownload = false
     },
     setProgressWidth() {
       this.pregessWidth = parseInt(
@@ -886,6 +895,12 @@ export default {
     addMusicTo() {
       if (!this.musicInfo.songmid) return
       this.isShowAddMusicTo = true
+    },
+    downloadMusic() {
+      if (!this.musicInfo.songmid) return
+      this.$nextTick(() => {
+        this.isShowDownload = true
+      })
     },
     handleRestorePlay(restorePlayInfo) {
       let musicInfo = this.list[restorePlayInfo.index]
